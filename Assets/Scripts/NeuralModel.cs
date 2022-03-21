@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class NeuralModel : MonoBehaviour
 {
-    [SerializeField, Range(16, 64)]
+    [SerializeField, Range(16, 256)]
     int resolution = 16;
 
     [SerializeField, Range(-0.1f, 0.1f)]

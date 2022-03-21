@@ -424,7 +424,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fdff9db4e38e2d046b7553a0a0598f46, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  resolution: 32
+  resolution: 64
   u: 0
   v: 0
   interpolatePeriodically: 1
