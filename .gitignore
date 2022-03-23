@@ -227,3 +227,4 @@ cython_debug/
 datasets/
 outputs/
 *.onnx
+*.pt
