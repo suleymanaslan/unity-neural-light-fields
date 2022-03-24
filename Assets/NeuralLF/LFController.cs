@@ -13,7 +13,7 @@ public class LFController : MonoBehaviour
     [SerializeField, Range(4, 256)]
     int resolution;
 
-    [SerializeField, Range(0.1f, 1f)]
+    [SerializeField, Range(0.01f, 1f)]
     float spherePercentage;
 
     bool paused;

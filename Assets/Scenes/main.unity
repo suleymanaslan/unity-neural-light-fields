@@ -427,9 +427,10 @@ MonoBehaviour:
   resolution: 128
   u: 0
   v: 0
+  interpolationSpeed: 0.5
   interpolatePeriodically: 1
   display: {fileID: 419115866}
-  modelSource: {fileID: 5022602860645237092, guid: 2d480547d38c08747b2c870ec639b50e, type: 3}
+  modelSource: {fileID: 5022602860645237092, guid: 0632e4bdade71e94ea1a296d4e8e362b, type: 3}
 --- !u!4 &1768398958
 Transform:
   m_ObjectHideFlags: 0

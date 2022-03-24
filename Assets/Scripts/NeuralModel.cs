@@ -6,8 +6,11 @@ public class NeuralModel : MonoBehaviour
     [SerializeField, Range(16, 256)]
     int resolution = 16;
 
-    [SerializeField, Range(-0.1f, 0.1f)]
+    [SerializeField, Range(-1f, 1f)]
     float u, v;
+
+    [SerializeField, Range(0f, 2f)]
+    float interpolationSpeed = 1f;
 
     [SerializeField]
     bool interpolatePeriodically;
@@ -25,6 +28,8 @@ public class NeuralModel : MonoBehaviour
     Tensor inputTensor;
 
     Tensor outputTensor;
+
+    float scaleFactor = 1f;
 
     private void OnEnable()
     {
@@ -76,8 +81,8 @@ public class NeuralModel : MonoBehaviour
             }
             if (interpolatePeriodically)
             {
-                inputCoordinates[i, 0] = 0.1f * Mathf.Sin(Mathf.PI * Time.time);
-                inputCoordinates[i, 1] = 0.1f * Mathf.Cos(Mathf.PI * Time.time);
+                inputCoordinates[i, 0] = scaleFactor * Mathf.Sin(Mathf.PI * Time.time * interpolationSpeed);
+                inputCoordinates[i, 1] = scaleFactor * Mathf.Cos(Mathf.PI * Time.time * interpolationSpeed);
             }
             else
             {
