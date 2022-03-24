@@ -13,8 +13,10 @@ public class LFController : MonoBehaviour
     [SerializeField, Range(4, 256)]
     int resolution;
 
-    [SerializeField, Range(0.01f, 1f)]
-    float spherePercentage;
+    [SerializeField, Range(15, 165)]
+    int degrees;
+
+    float SpherePercentage => degrees / 360f;
 
     bool paused;
 
@@ -97,11 +99,11 @@ public class LFController : MonoBehaviour
 
     public Vector3 Sphere(float u, float v)
     {
-        float r = 1f + Cos(0.5f * PI * spherePercentage * v);
+        float r = Cos(0.5f * PI * SpherePercentage * v);
         Vector3 p;
-        p.x = r * Sin(PI + PI * spherePercentage * u);
-        p.y = Sin(PI * spherePercentage * 0.5f * v);
-        p.z = r * Cos(PI + PI * spherePercentage * u);
+        p.x = r * Sin(PI + PI * SpherePercentage * u);
+        p.y = Sin(PI * SpherePercentage * 0.5f * v);
+        p.z = r * Cos(PI + PI * SpherePercentage * u);
         return p;
     }
 }

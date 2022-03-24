@@ -7,7 +7,7 @@ public class CameraCapture : MonoBehaviour
     {
         Camera cam = GetComponent<Camera>();
 
-        cam.targetTexture = new RenderTexture(256, 256, 24, RenderTextureFormat.ARGB32);
+        cam.targetTexture = new RenderTexture(512, 512, 24, RenderTextureFormat.ARGB32);
 
         RenderTexture activeRenderTexture = RenderTexture.active;
         RenderTexture.active = cam.targetTexture;

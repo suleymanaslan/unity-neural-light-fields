@@ -47,4 +47,4 @@ MonoBehaviour:
   gridPrefab: {fileID: 4528678890694828797, guid: f68d2a234661cbc4ca2d37d002738f27,
     type: 3}
   resolution: 64
-  spherePercentage: 0.08333
+  degrees: 120
