@@ -430,7 +430,7 @@ MonoBehaviour:
   interpolationSpeed: 0.5
   interpolatePeriodically: 1
   display: {fileID: 419115866}
-  modelSource: {fileID: 5022602860645237092, guid: 0632e4bdade71e94ea1a296d4e8e362b, type: 3}
+  modelSource: {fileID: 5022602860645237092, guid: 372941cdea2003748bdeb5ec4316f313, type: 3}
 --- !u!4 &1768398958
 Transform:
   m_ObjectHideFlags: 0
