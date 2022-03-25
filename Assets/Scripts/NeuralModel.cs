@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class NeuralModel : MonoBehaviour
 {
-    [SerializeField, Range(16, 256)]
+    [SerializeField, Range(4, 256)]
     int resolution = 16;
 
     [SerializeField, Range(-1f, 1f)]
@@ -23,54 +23,80 @@ public class NeuralModel : MonoBehaviour
 
     IWorker worker;
 
+    float[,] spatialCoordinates;
+
     float[,] inputCoordinates;
 
     Tensor inputTensor;
 
     Tensor outputTensor;
 
-    float scaleFactor = 1f;
+    readonly float scaleFactor = 1f;
+
+    int InputResolution => resolution / 2;
+    int InputSize => InputResolution * InputResolution;
+
+    int[] spatialOffset;
+    int[,] textureOffset;
+
+    int offsetIndex = 0;
+
+    Texture2D texture;
 
     private void OnEnable()
     {
+        spatialOffset = new int[] { 0, 1, resolution, resolution + 1 };
+        textureOffset = new int[,] { { 0, 0 }, { 0, 1 }, { 1, 0 }, { 1, 1 } };
+        inputCoordinates = new float[InputSize, 4];
+        texture = new Texture2D(resolution, resolution, TextureFormat.ARGB32, false)
+        {
+            filterMode = FilterMode.Point
+        };
+        display.GetComponent<Renderer>().material.mainTexture = texture;
+
         worker = WorkerFactory.CreateWorker(WorkerFactory.Type.ComputePrecompiled, ModelLoader.Load(modelSource));
+        InitializeSpatialCoordinates();
+        CreateInputCoordinates();
+        ForwardPass();
+        CreateTexture();
     }
 
     private void Update()
     {
+        offsetIndex++;
+        if (offsetIndex == 4)
+        {
+            offsetIndex = 0;
+        }
+        CreateInputCoordinates();
         ForwardPass();
-        display.GetComponent<Renderer>().material.mainTexture = CreateTexture();
+        CreateTexture();
     }
 
     void ForwardPass()
     {
-        CreateImageArray();
-        inputTensor = new Tensor(resolution * resolution, 4, inputCoordinates);
+        inputTensor = new Tensor(resolution * resolution / 4, 4, inputCoordinates);
         worker.Execute(inputTensor);
         outputTensor = worker.PeekOutput();
         inputTensor.Dispose();
     }
 
-    public Texture2D CreateTexture()
+    public void CreateTexture()
     {
-        var texture = new Texture2D(resolution, resolution, TextureFormat.ARGB32, false);
-        texture.filterMode = FilterMode.Point;
-
-        for (int i = 0; i < resolution; i++)
+        for (int i = 0; i < InputResolution; i++)
         {
-            for (int j = 0; j < resolution; j++)
+            for (int j = 0; j < InputResolution; j++)
             {
-                texture.SetPixel(j, resolution - 1 - i, GetOutputColor(j * resolution + i));
+                texture.SetPixel(j * 2 + textureOffset[offsetIndex, 0], resolution - 1 - (i * 2 + textureOffset[offsetIndex, 1]), GetOutputColor(j * InputResolution + i));
             }
         }
         texture.Apply();
-        return texture;
     }
 
-    void CreateImageArray()
+    void InitializeSpatialCoordinates()
     {
         int size = resolution * resolution;
-        inputCoordinates = new float[size, 4];
+        spatialCoordinates = new float[size, 2];
         float step = 2f / (resolution - 1);
         for (int i = 0, x = 0, z = 0; i < size; i++, x++)
         {
@@ -79,24 +105,38 @@ public class NeuralModel : MonoBehaviour
                 x = 0;
                 z++;
             }
-            if (interpolatePeriodically)
+            spatialCoordinates[i, 0] = -1f + x * step;
+            spatialCoordinates[i, 1] = -1f + z * step;
+        }
+
+    }
+
+    void CreateInputCoordinates()
+    {
+        float curU = interpolatePeriodically ? scaleFactor * Mathf.Sin(Mathf.PI * Time.time * interpolationSpeed) : scaleFactor * u;
+        float curV = interpolatePeriodically ? scaleFactor * Mathf.Cos(Mathf.PI * Time.time * interpolationSpeed) : scaleFactor * v;
+        for (int i = 0, x = 0, si = spatialOffset[offsetIndex]; i < InputSize; i++, x++, si += 2)
+        {
+            if (x == InputResolution)
             {
-                inputCoordinates[i, 0] = scaleFactor * Mathf.Sin(Mathf.PI * Time.time * interpolationSpeed);
-                inputCoordinates[i, 1] = scaleFactor * Mathf.Cos(Mathf.PI * Time.time * interpolationSpeed);
+                x = 0;
+                si += resolution;
             }
-            else
-            {
-                inputCoordinates[i, 0] = u;
-                inputCoordinates[i, 1] = v;
-            }
-            inputCoordinates[i, 2] = -1f + x * step;
-            inputCoordinates[i, 3] = -1f + z * step;
+            inputCoordinates[i, 0] = curU;
+            inputCoordinates[i, 1] = curV;
+            inputCoordinates[i, 2] = spatialCoordinates[si, 0];
+            inputCoordinates[i, 3] = spatialCoordinates[si, 1];
         }
     }
 
     Color GetOutputColor(int i)
     {
         return new Color((outputTensor[i * 3] + 1) * 0.5f, (outputTensor[i * 3 + 1] + 1f) * 0.5f, (outputTensor[i * 3 + 1] + 1) * 0.5f);
+    }
+
+    void PrintSpatialCoordinates(int i)
+    {
+        Debug.Log(spatialCoordinates[i, 0] + ", " + spatialCoordinates[i, 1]);
     }
 
     void PrintCoordinates(int i)
