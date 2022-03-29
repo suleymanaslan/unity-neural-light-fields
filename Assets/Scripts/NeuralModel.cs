@@ -81,6 +81,23 @@ public class NeuralModel : MonoBehaviour
         inputTensor.Dispose();
     }
 
+    Tensor ExecuteInParts(IWorker worker, Tensor I, int syncEveryNthLayer = 32)
+    {
+        var executor = worker.StartManualSchedule(I);
+        var it = 0;
+        bool hasMoreWork;
+
+        do
+        {
+            hasMoreWork = executor.MoveNext();
+            if (++it % syncEveryNthLayer == 0)
+                worker.FlushSchedule();
+
+        } while (hasMoreWork);
+
+        return worker.PeekOutput();
+    }
+
     public void CreateTexture()
     {
         for (int i = 0; i < InputResolution; i++)
@@ -146,9 +163,9 @@ public class NeuralModel : MonoBehaviour
 
     private void OnDisable()
     {
-        outputTensor.Dispose();
-        inputTensor.Dispose();
-        worker.Dispose();
+        outputTensor?.Dispose();
+        inputTensor?.Dispose();
+        worker?.Dispose();
     }
 
 }
