@@ -20,6 +20,8 @@ public class LFController : MonoBehaviour
 
     bool paused;
 
+    Transform[] points;
+
     private void Awake()
     {
 
@@ -46,6 +48,10 @@ public class LFController : MonoBehaviour
             }
             paused = !paused;
         }
+        if (Input.GetKeyDown(KeyCode.I))
+        {
+            IterateGrid();
+        }
         if (Input.GetKeyDown(KeyCode.G))
         {
             CreateGrid();
@@ -66,7 +72,7 @@ public class LFController : MonoBehaviour
         }
     }
 
-    void CreateGrid()
+    void IterateGrid()
     {
         foreach (Transform child in transform)
         {
@@ -93,6 +99,40 @@ public class LFController : MonoBehaviour
             point.gameObject.name = x.ToString("D3") + "-" + z.ToString("D3");
             point.transform.LookAt(target);
             point.GetComponent<CameraCapture>().CamCapture();
+        }
+        transform.position = target.position;
+    }
+
+    void CreateGrid()
+    {
+        foreach (Transform child in transform)
+        {
+            Destroy(child.gameObject);
+        }
+        points = new Transform[resolution * resolution];
+        for (int i = 0; i < points.Length; i++)
+        {
+            Transform point = points[i] = Instantiate(gridPrefab);
+        }
+        float step = 2f / (resolution - 1);
+        float u = -1f;
+        GameObject uChild = new GameObject("-1");
+        uChild.transform.SetParent(transform, false);
+        for (int i = 0, x = 0, z = 0; i < points.Length; i++, x++)
+        {
+            if (x == resolution)
+            {
+                x = 0;
+                z += 1;
+                u = z * step - 1f;
+                uChild = new GameObject("" + u);
+                uChild.transform.SetParent(transform, false);
+            }
+            float v = (x * step - 1f);
+            points[i].SetParent(uChild.transform, false);
+            points[i].localPosition = Sphere(-u, -v);
+            points[i].gameObject.name = "(" + u + "," + v + ")";
+            points[i].transform.LookAt(target);
         }
         transform.position = target.position;
     }
