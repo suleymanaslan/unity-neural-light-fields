@@ -229,3 +229,4 @@ outputs/
 *.onnx
 *.pt
 Presentation/
+graphics/
