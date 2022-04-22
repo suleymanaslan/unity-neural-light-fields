@@ -21,6 +21,9 @@ public class NeuralModel : MonoBehaviour
     [SerializeField]
     NNModel modelSource;
 
+    [SerializeField, Range(1, 2)]
+    int resolutionFactor;
+
     IWorker worker;
 
     float[,] spatialCoordinates;
@@ -33,7 +36,7 @@ public class NeuralModel : MonoBehaviour
 
     readonly float scaleFactor = 1f;
 
-    int InputResolution => resolution / 2;
+    int InputResolution => resolution / resolutionFactor;
     int InputSize => InputResolution * InputResolution;
 
     int[] spatialOffset;
@@ -63,10 +66,13 @@ public class NeuralModel : MonoBehaviour
 
     private void Update()
     {
-        offsetIndex++;
-        if (offsetIndex == 4)
+        if (resolutionFactor == 2)
         {
-            offsetIndex = 0;
+            offsetIndex++;
+            if (offsetIndex == 4)
+            {
+                offsetIndex = 0;
+            }
         }
         CreateInputCoordinates();
         ForwardPass();
@@ -75,7 +81,7 @@ public class NeuralModel : MonoBehaviour
 
     void ForwardPass()
     {
-        inputTensor = new Tensor(resolution * resolution / 4, 4, inputCoordinates);
+        inputTensor = new Tensor(resolution * resolution / (resolutionFactor * resolutionFactor), 4, inputCoordinates);
         worker.Execute(inputTensor);
         outputTensor = worker.PeekOutput();
         inputTensor.Dispose();
@@ -104,7 +110,7 @@ public class NeuralModel : MonoBehaviour
         {
             for (int j = 0; j < InputResolution; j++)
             {
-                texture.SetPixel(j * 2 + textureOffset[offsetIndex, 0], resolution - 1 - (i * 2 + textureOffset[offsetIndex, 1]), GetOutputColor(j * InputResolution + i));
+                texture.SetPixel(j * resolutionFactor + textureOffset[offsetIndex, 0], resolution - 1 - (i * resolutionFactor + textureOffset[offsetIndex, 1]), GetOutputColor(j * InputResolution + i));
             }
         }
         texture.Apply();
@@ -132,12 +138,15 @@ public class NeuralModel : MonoBehaviour
     {
         float curU = interpolatePeriodically ? scaleFactor * Mathf.Sin(Mathf.PI * Time.time * interpolationSpeed) : scaleFactor * u;
         float curV = interpolatePeriodically ? scaleFactor * Mathf.Cos(Mathf.PI * Time.time * interpolationSpeed) : scaleFactor * v;
-        for (int i = 0, x = 0, si = spatialOffset[offsetIndex]; i < InputSize; i++, x++, si += 2)
+        for (int i = 0, x = 0, si = spatialOffset[offsetIndex]; i < InputSize; i++, x++, si += resolutionFactor)
         {
             if (x == InputResolution)
             {
                 x = 0;
-                si += resolution;
+                if (resolutionFactor == 2)
+                {
+                    si += resolution;
+                }
             }
             inputCoordinates[i, 0] = curU;
             inputCoordinates[i, 1] = curV;
