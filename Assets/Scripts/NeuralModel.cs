@@ -157,7 +157,13 @@ public class NeuralModel : MonoBehaviour
 
     Color GetOutputColor(int i)
     {
-        return new Color((outputTensor[i * 3] + 1) * 0.5f, (outputTensor[i * 3 + 1] + 1f) * 0.5f, (outputTensor[i * 3 + 1] + 1) * 0.5f);
+        float r = (outputTensor[i * 3] + 1) * 0.5f;
+        float g = (outputTensor[i * 3 + 1] + 1f) * 0.5f;
+        float b = (outputTensor[i * 3 + 1] + 1) * 0.5f;
+        r = Mathf.Abs(r) > 0.01 ? r : 0f;
+        g = Mathf.Abs(g) > 0.01 ? g : 0f;
+        b = Mathf.Abs(b) > 0.01 ? b : 0f;
+        return new Color(r, g, b);
     }
 
     void PrintSpatialCoordinates(int i)

@@ -424,14 +424,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fdff9db4e38e2d046b7553a0a0598f46, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  resolution: 256
+  resolution: 128
   u: 0
   v: 0
   interpolationSpeed: 0.5
   interpolatePeriodically: 1
   display: {fileID: 419115866}
   modelSource: {fileID: 5022602860645237092, guid: 35524beae38494a4b913ae28fcb94c51, type: 3}
-  resolutionFactor: 1
+  resolutionFactor: 2
 --- !u!4 &1768398958
 Transform:
   m_ObjectHideFlags: 0
