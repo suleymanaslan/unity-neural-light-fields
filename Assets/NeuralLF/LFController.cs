@@ -58,14 +58,15 @@ public class LFController : MonoBehaviour
             paused = !paused;
         }
         if (Keyboard.current.iKey.wasReleasedThisFrame)
+        if (Input.GetKeyDown(KeyCode.I))
         {
             IterateGrid();
         }
         if (Keyboard.current.gKey.wasReleasedThisFrame)
+        if (Input.GetKeyDown(KeyCode.G))
         {
             CreateGrid();
         }
-        if (Keyboard.current.aKey.wasReleasedThisFrame)
         {
             animate = true;
             animatedPoint = Instantiate(gridPrefab);
