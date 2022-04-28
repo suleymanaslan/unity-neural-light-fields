@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 using static UnityEngine.Mathf;
 
@@ -14,7 +13,7 @@ public class LFController : MonoBehaviour
     [SerializeField, Range(4, 256)]
     int resolution;
 
-    [SerializeField, Range(15, 165)]
+    [SerializeField, Range(15, 360)]
     int degrees;
 
     [SerializeField, Range(1.0f, 2.5f)]
@@ -43,10 +42,8 @@ public class LFController : MonoBehaviour
     void Update()
     {
         
-        if (Keyboard.current.pKey.wasReleasedThisFrame)
+        if (Input.GetKeyDown(KeyCode.P))
         {
-            transform.position = target.position + target.forward;
-            transform.LookAt(target);
             if (paused)
             {
                 Time.timeScale = 1;
@@ -57,16 +54,15 @@ public class LFController : MonoBehaviour
             }
             paused = !paused;
         }
-        if (Keyboard.current.iKey.wasReleasedThisFrame)
         if (Input.GetKeyDown(KeyCode.I))
         {
             IterateGrid();
         }
-        if (Keyboard.current.gKey.wasReleasedThisFrame)
         if (Input.GetKeyDown(KeyCode.G))
         {
             CreateGrid();
         }
+        if (Input.GetKeyDown(KeyCode.A))
         {
             animate = true;
             animatedPoint = Instantiate(gridPrefab);
@@ -80,7 +76,7 @@ public class LFController : MonoBehaviour
 
     private void LateUpdate()
     {
-        if (Keyboard.current.cKey.wasReleasedThisFrame)
+        if (Input.GetKeyDown(KeyCode.C))
         {
             foreach (Transform child in transform)
             {
@@ -104,9 +100,9 @@ public class LFController : MonoBehaviour
         {
             Destroy(child.gameObject);
         }
-        float step = 2f / (resolution - 1);
-        float u = -1f;
-        GameObject uChild = new GameObject("-1");
+        float step = 2f / resolution;
+        float u = -1f + step / 2f;
+        GameObject uChild = new GameObject("" + u);
         uChild.transform.SetParent(transform, false);
         for (int i = 0, x = 0, z = 0; i < resolution * resolution; i++, x++)
         {
@@ -114,7 +110,7 @@ public class LFController : MonoBehaviour
             {
                 x = 0;
                 z += 1;
-                u = z * step - 1f;
+                u = z * step + step / 2f - 1f;
                 uChild = new GameObject("" + u);
                 uChild.transform.SetParent(transform, false);
             }
@@ -127,7 +123,6 @@ public class LFController : MonoBehaviour
             point.GetComponent<CameraCapture>().CamCapture();
             Destroy(point.gameObject);
         }
-        transform.position = target.position;
     }
 
     void CreateGrid()
@@ -141,9 +136,9 @@ public class LFController : MonoBehaviour
         {
             Transform point = points[i] = Instantiate(gridPrefab);
         }
-        float step = 2f / (resolution - 1);
-        float u = -1f;
-        GameObject uChild = new GameObject("-1");
+        float step = 2f / resolution;
+        float u = -1f + step / 2f;
+        GameObject uChild = new GameObject("" + u);
         uChild.transform.SetParent(transform, false);
         for (int i = 0, x = 0, z = 0; i < points.Length; i++, x++)
         {
@@ -151,24 +146,23 @@ public class LFController : MonoBehaviour
             {
                 x = 0;
                 z += 1;
-                u = z * step - 1f;
+                u = z * step + step / 2f - 1f;
                 uChild = new GameObject("" + u);
                 uChild.transform.SetParent(transform, false);
             }
             float v = (x * step - 1f);
             points[i].SetParent(uChild.transform, false);
             points[i].localPosition = Sphere(-u, -v);
-            points[i].gameObject.name = "(" + u + "," + v + ")";
+            points[i].gameObject.name = x.ToString("D3") + "-" + z.ToString("D3");
             points[i].transform.LookAt(target);
         }
-        transform.position = target.position;
     }
 
     public Vector3 TimeSphere()
     {
         float t = Sin(PI * Time.unscaledTime * 0.25f);
         float t2 = t * 4;
-        float r = Cos(0.5f * PI * SpherePercentage * t);
+        float r = Cos(0.45f * PI * SpherePercentage * t);
         Vector3 p;
         p.x = r * Sin(PI + PI * SpherePercentage * t2);
         p.y = Sin(PI * SpherePercentage * 0.5f * t);
@@ -178,7 +172,7 @@ public class LFController : MonoBehaviour
 
     public Vector3 Sphere(float u, float v)
     {
-        float r = Cos(0.5f * PI * SpherePercentage * v);
+        float r = Cos(0.45f * PI * SpherePercentage * v);
         Vector3 p;
         p.x = r * Sin(PI + PI * SpherePercentage * u);
         p.y = Sin(PI * SpherePercentage * 0.5f * v);
