@@ -484,11 +484,11 @@ MonoBehaviour:
   u: 0
   v: 0
   interpolationSpeed: 0.5
-  interpolatePeriodically: 1
+  interpolatePeriodically: 0
   predictSampling: 0
   display: {fileID: 1761797571}
   modelSource: {fileID: 5022602860645237092, guid: 35524beae38494a4b913ae28fcb94c51, type: 3}
-  resolutionFactor: 1
+  resolutionFactor: 2
 --- !u!1 &1686248759
 GameObject:
   m_ObjectHideFlags: 0

@@ -34,6 +34,7 @@ public class NeuralModel : MonoBehaviour
     float[,] inputCoordinates;
 
     bool[,] inputMask;
+    bool[,] newMask;
 
     int maskSum;
 
@@ -52,6 +53,13 @@ public class NeuralModel : MonoBehaviour
     int offsetIndex = 0;
 
     Texture2D texture;
+
+    Texture2D prevTexture;
+
+    int maskAnchorPeriod = 64;
+    int maskFilterSize = 3;
+
+    System.Func<Color, float> meanRGB = c => (c.r + c.g + c.b) / 3f;
 
     private void OnEnable()
     {
@@ -72,6 +80,10 @@ public class NeuralModel : MonoBehaviour
         {
             filterMode = FilterMode.Point
         };
+        prevTexture = new Texture2D(resolution, resolution, TextureFormat.ARGB32, false)
+        {
+            filterMode = FilterMode.Point
+        };
         display.GetComponent<Renderer>().material.mainTexture = texture;
 
         worker = WorkerFactory.CreateWorker(WorkerFactory.Type.ComputePrecompiled, ModelLoader.Load(modelSource));
@@ -83,25 +95,6 @@ public class NeuralModel : MonoBehaviour
 
     private void Update()
     {
-        if (predictSampling)
-        {
-            maskSum = 0;
-            for (int maskI = 0; maskI < InputResolution; maskI++)
-            {
-                for (int maskJ = 0; maskJ < InputResolution; maskJ++)
-                {
-                    if (maskI >= InputResolution / 2)
-                    {
-                        inputMask[maskI, maskJ] = true;
-                        maskSum++;
-                    }
-                    else
-                    {
-                        inputMask[maskI, maskJ] = false;
-                    }
-                }
-            }
-        }
         if (resolutionFactor == 2)
         {
             offsetIndex++;
@@ -143,19 +136,59 @@ public class NeuralModel : MonoBehaviour
     public void CreateTexture()
     {
         int outputI = 0;
+        if (predictSampling)
+        {
+            newMask = new bool[InputResolution, InputResolution];
+            maskSum = 0;
+        }
         for (int maskI = 0; maskI < InputResolution; maskI++)
         {
             for (int maskJ = 0; maskJ < InputResolution; maskJ++)
             {
                 if (inputMask[maskI, maskJ])
                 {
-                    //texture.SetPixel(maskJ * resolutionFactor + textureOffset[offsetIndex, 0], resolution - 1 - (maskI * resolutionFactor + textureOffset[offsetIndex, 1]), GetOutputColor(maskJ * InputResolution + maskI));
-                    texture.SetPixel(maskJ * resolutionFactor + textureOffset[offsetIndex, 0], resolution - 1 - (maskI * resolutionFactor + textureOffset[offsetIndex, 1]), GetOutputColor(outputI));
+                    Color outputColor = GetOutputColor(outputI);
+                    texture.SetPixel(maskJ * resolutionFactor + textureOffset[offsetIndex, 0], resolution - 1 - (maskI * resolutionFactor + textureOffset[offsetIndex, 1]), outputColor);
                     outputI++;
+                    if (predictSampling)
+                    {
+                        Color prevColor = prevTexture.GetPixel(maskJ * resolutionFactor + textureOffset[offsetIndex, 0], resolution - 1 - (maskI * resolutionFactor + textureOffset[offsetIndex, 1]));
+                        if (Mathf.Abs(meanRGB(outputColor) - meanRGB(prevColor)) > 0.01f || (maskJ + maskAnchorPeriod / 2) % maskAnchorPeriod == 0 || (maskI + maskAnchorPeriod / 2) % maskAnchorPeriod == 0)
+                        {
+                            for (int offsetI = 0; offsetI < maskFilterSize; offsetI++)
+                            {
+                                for (int offsetJ = 0; offsetJ < maskFilterSize; offsetJ++)
+                                {
+                                    int windowI = maskI + offsetI - (maskFilterSize - 1) / 2;
+                                    int windowJ = maskJ + offsetJ - (maskFilterSize - 1) / 2;
+                                    windowI = windowI < 0 ? 0 : windowI;
+                                    windowI = windowI >= InputResolution ? InputResolution - 1 : windowI;
+                                    windowJ = windowJ < 0 ? 0 : windowJ;
+                                    windowJ = windowJ >= InputResolution ? InputResolution - 1 : windowJ;
+                                    if (!newMask[windowI, windowJ])
+                                    {
+                                        maskSum++;
+                                    }
+                                    newMask[windowI, windowJ] = true;
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
         texture.Apply();
+        if (predictSampling)
+        {
+            Graphics.CopyTexture(texture, prevTexture);
+            for (int maskI = 0; maskI < InputResolution; maskI++)
+            {
+                for (int maskJ = 0; maskJ < InputResolution; maskJ++)
+                {
+                    inputMask[maskI, maskJ] = newMask[maskI, maskJ];
+                }
+            }
+        }
     }
 
     void InitializeSpatialCoordinates()
@@ -180,25 +213,6 @@ public class NeuralModel : MonoBehaviour
         float curU = interpolatePeriodically ? scaleFactor * Mathf.Sin(Mathf.PI * Time.time * interpolationSpeed) : scaleFactor * u;
         float curV = interpolatePeriodically ? scaleFactor * Mathf.Cos(Mathf.PI * Time.time * interpolationSpeed) : scaleFactor * v;
         int inputI = 0;
-        //for (int maskI = 0, x = 0, si = spatialOffset[offsetIndex]; maskI < InputSize; maskI++, x++, si += resolutionFactor)
-        //{
-        //    if (x == InputResolution)
-        //    {
-        //        x = 0;
-        //        if (resolutionFactor == 2)
-        //        {
-        //            si += resolution;
-        //        }
-        //    }
-        //    if (inputMask[maskI])
-        //    {
-        //        inputCoordinates[inputI, 0] = curU;
-        //        inputCoordinates[inputI, 1] = curV;
-        //        inputCoordinates[inputI, 2] = spatialCoordinates[si, 0];
-        //        inputCoordinates[inputI, 3] = spatialCoordinates[si, 1];
-        //        inputI++;
-        //    }
-        //}
         int si = spatialOffset[offsetIndex];
         for (int maskI = 0; maskI < InputResolution; maskI++)
         {
@@ -226,10 +240,27 @@ public class NeuralModel : MonoBehaviour
         float r = (outputTensor[i * 3] + 1) * 0.5f;
         float g = (outputTensor[i * 3 + 1] + 1f) * 0.5f;
         float b = (outputTensor[i * 3 + 1] + 1) * 0.5f;
-        r = Mathf.Abs(r) > 0.01 ? r : 0f;
-        g = Mathf.Abs(g) > 0.01 ? g : 0f;
-        b = Mathf.Abs(b) > 0.01 ? b : 0f;
+        r = r > 0.01 ? r : 0f;
+        g = g > 0.01 ? g : 0f;
+        b = b > 0.01 ? b : 0f;
+        r = r < 0.99 ? r : 1f;
+        g = g < 0.99 ? g : 1f;
+        b = b < 0.99 ? b : 1f;
         return new Color(r, g, b);
+    }
+
+    float GetOutputFloat(Tensor tensor, int i)
+    {
+        float r = (tensor[i * 3] + 1) * 0.5f;
+        float g = (tensor[i * 3 + 1] + 1f) * 0.5f;
+        float b = (tensor[i * 3 + 1] + 1) * 0.5f;
+        r = r > 0.01 ? r : 0f;
+        g = g > 0.01 ? g : 0f;
+        b = b > 0.01 ? b : 0f;
+        r = r < 0.99 ? r : 1f;
+        g = g < 0.99 ? g : 1f;
+        b = b < 0.99 ? b : 1f;
+        return r + g + b;
     }
 
     void PrintSpatialCoordinates(int i)
