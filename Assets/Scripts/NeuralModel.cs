@@ -16,6 +16,9 @@ public class NeuralModel : MonoBehaviour
     bool interpolatePeriodically;
 
     [SerializeField]
+    bool predictSampling;
+
+    [SerializeField]
     GameObject display;
 
     [SerializeField]
@@ -29,6 +32,10 @@ public class NeuralModel : MonoBehaviour
     float[,] spatialCoordinates;
 
     float[,] inputCoordinates;
+
+    bool[,] inputMask;
+
+    int maskSum;
 
     Tensor inputTensor;
 
@@ -50,7 +57,17 @@ public class NeuralModel : MonoBehaviour
     {
         spatialOffset = new int[] { 0, 1, resolution, resolution + 1 };
         textureOffset = new int[,] { { 0, 0 }, { 0, 1 }, { 1, 0 }, { 1, 1 } };
-        inputCoordinates = new float[InputSize, 4];
+        inputMask = new bool[InputResolution, InputResolution];
+        maskSum = 0;
+        for (int maskI = 0; maskI < InputResolution; maskI++)
+        {
+            for (int maskJ = 0; maskJ < InputResolution; maskJ++)
+            {
+                inputMask[maskI, maskJ] = true;
+                maskSum++;
+            }
+        }
+        inputCoordinates = new float[maskSum, 4];
         texture = new Texture2D(resolution, resolution, TextureFormat.ARGB32, false)
         {
             filterMode = FilterMode.Point
@@ -66,6 +83,25 @@ public class NeuralModel : MonoBehaviour
 
     private void Update()
     {
+        if (predictSampling)
+        {
+            maskSum = 0;
+            for (int maskI = 0; maskI < InputResolution; maskI++)
+            {
+                for (int maskJ = 0; maskJ < InputResolution; maskJ++)
+                {
+                    if (maskI >= InputResolution / 2)
+                    {
+                        inputMask[maskI, maskJ] = true;
+                        maskSum++;
+                    }
+                    else
+                    {
+                        inputMask[maskI, maskJ] = false;
+                    }
+                }
+            }
+        }
         if (resolutionFactor == 2)
         {
             offsetIndex++;
@@ -81,7 +117,7 @@ public class NeuralModel : MonoBehaviour
 
     void ForwardPass()
     {
-        inputTensor = new Tensor(resolution * resolution / (resolutionFactor * resolutionFactor), 4, inputCoordinates);
+        inputTensor = new Tensor(maskSum, 4, inputCoordinates);
         worker.Execute(inputTensor);
         outputTensor = worker.PeekOutput();
         inputTensor.Dispose();
@@ -106,11 +142,17 @@ public class NeuralModel : MonoBehaviour
 
     public void CreateTexture()
     {
-        for (int i = 0; i < InputResolution; i++)
+        int outputI = 0;
+        for (int maskI = 0; maskI < InputResolution; maskI++)
         {
-            for (int j = 0; j < InputResolution; j++)
+            for (int maskJ = 0; maskJ < InputResolution; maskJ++)
             {
-                texture.SetPixel(j * resolutionFactor + textureOffset[offsetIndex, 0], resolution - 1 - (i * resolutionFactor + textureOffset[offsetIndex, 1]), GetOutputColor(j * InputResolution + i));
+                if (inputMask[maskI, maskJ])
+                {
+                    //texture.SetPixel(maskJ * resolutionFactor + textureOffset[offsetIndex, 0], resolution - 1 - (maskI * resolutionFactor + textureOffset[offsetIndex, 1]), GetOutputColor(maskJ * InputResolution + maskI));
+                    texture.SetPixel(maskJ * resolutionFactor + textureOffset[offsetIndex, 0], resolution - 1 - (maskI * resolutionFactor + textureOffset[offsetIndex, 1]), GetOutputColor(outputI));
+                    outputI++;
+                }
             }
         }
         texture.Apply();
@@ -131,27 +173,51 @@ public class NeuralModel : MonoBehaviour
             spatialCoordinates[i, 0] = -1f + x * step;
             spatialCoordinates[i, 1] = -1f + z * step;
         }
-
     }
 
     void CreateInputCoordinates()
     {
         float curU = interpolatePeriodically ? scaleFactor * Mathf.Sin(Mathf.PI * Time.time * interpolationSpeed) : scaleFactor * u;
         float curV = interpolatePeriodically ? scaleFactor * Mathf.Cos(Mathf.PI * Time.time * interpolationSpeed) : scaleFactor * v;
-        for (int i = 0, x = 0, si = spatialOffset[offsetIndex]; i < InputSize; i++, x++, si += resolutionFactor)
+        int inputI = 0;
+        //for (int maskI = 0, x = 0, si = spatialOffset[offsetIndex]; maskI < InputSize; maskI++, x++, si += resolutionFactor)
+        //{
+        //    if (x == InputResolution)
+        //    {
+        //        x = 0;
+        //        if (resolutionFactor == 2)
+        //        {
+        //            si += resolution;
+        //        }
+        //    }
+        //    if (inputMask[maskI])
+        //    {
+        //        inputCoordinates[inputI, 0] = curU;
+        //        inputCoordinates[inputI, 1] = curV;
+        //        inputCoordinates[inputI, 2] = spatialCoordinates[si, 0];
+        //        inputCoordinates[inputI, 3] = spatialCoordinates[si, 1];
+        //        inputI++;
+        //    }
+        //}
+        int si = spatialOffset[offsetIndex];
+        for (int maskI = 0; maskI < InputResolution; maskI++)
         {
-            if (x == InputResolution)
+            for (int maskJ = 0; maskJ < InputResolution; maskJ++)
             {
-                x = 0;
-                if (resolutionFactor == 2)
+                if (inputMask[maskI, maskJ])
                 {
-                    si += resolution;
+                    inputCoordinates[inputI, 0] = curU;
+                    inputCoordinates[inputI, 1] = curV;
+                    inputCoordinates[inputI, 2] = spatialCoordinates[si, 0];
+                    inputCoordinates[inputI, 3] = spatialCoordinates[si, 1];
+                    inputI++;
                 }
+                si += resolutionFactor;
             }
-            inputCoordinates[i, 0] = curU;
-            inputCoordinates[i, 1] = curV;
-            inputCoordinates[i, 2] = spatialCoordinates[si, 0];
-            inputCoordinates[i, 3] = spatialCoordinates[si, 1];
+            if (resolutionFactor == 2)
+            {
+                si += resolution;
+            }
         }
     }
 
