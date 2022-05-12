@@ -11,20 +11,32 @@ public class Receiver
 {
     private readonly Thread receiveThread;
     private bool running;
+    private Client client;
 
-    public Receiver()
+    public Receiver(Client _client)
     {
+        client = _client;
         receiveThread = new Thread((object callback) =>
         {
+            TimeSpan timeout = new TimeSpan(0, 0, 5);
+            bool imageReceived = false;
+            byte[] rawImage;
             using (var socket = new RequestSocket())
             {
                 socket.Connect("tcp://localhost:5555");
 
                 while (running)
                 {
-                    socket.SendFrameEmpty();
-                    byte[] rawImage = socket.ReceiveFrameBytes();
-                    ((Action<byte[]>)callback)(rawImage);
+                    //socket.SendFrameEmpty();
+                    //rawImage = socket.ReceiveFrameBytes();
+                    if (socket.TrySendFrame(client.u + "," + client.v))
+                    {
+                        imageReceived = socket.TryReceiveFrameBytes(timeout, out rawImage);
+                        if (imageReceived)
+                        {
+                            ((Action<byte[]>)callback)(rawImage);
+                        }
+                    }
                 }
             }
         });
@@ -49,6 +61,9 @@ public class Client : MonoBehaviour
     private Receiver receiver;
     private Texture2D tex;
 
+    [SerializeField, Range(-1f, 1f)]
+    public float u, v;
+
     [SerializeField]
     private RawImage display;
 
@@ -61,7 +76,7 @@ public class Client : MonoBehaviour
         display.texture = tex;
 
         ForceDotNet.Force();  // If you have multiple sockets in the following threads
-        receiver = new Receiver();
+        receiver = new Receiver(this);
         receiver.Start((byte[] rawImage) => runOnMainThread.Enqueue(() =>
         {
             tex.LoadRawTextureData(rawImage);
@@ -84,7 +99,7 @@ public class Client : MonoBehaviour
 
     private void OnDestroy()
     {
-        receiver.Stop();
+        receiver?.Stop();
         NetMQConfig.Cleanup();
     }
 }
