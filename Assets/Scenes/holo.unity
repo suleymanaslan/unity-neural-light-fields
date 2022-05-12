@@ -339,7 +339,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 589608046}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: -1}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -408,6 +408,8 @@ GameObject:
   - component: {fileID: 1353710637}
   - component: {fileID: 1353710636}
   - component: {fileID: 1353710635}
+  - component: {fileID: 1353710638}
+  - component: {fileID: 1353710639}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -474,7 +476,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1353710631}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 1}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -538,6 +540,36 @@ MonoBehaviour:
   m_FirstSelected: {fileID: 0}
   m_sendNavigationEvents: 1
   m_DragThreshold: 10
+--- !u!114 &1353710638
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1353710631}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b4287aa6c0d14534fb52e63b8b48aa9b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  u: 0
+  v: 0
+  display: {fileID: 1477827878}
+  resolution: 128
+--- !u!114 &1353710639
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1353710631}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a1dab8bef77b1d74c9f9b8ac55a18ce7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  displayPrefab: {fileID: 2663111220167508584, guid: e298144a50d36664aafa943b936edf2a, type: 3}
+  target: {fileID: 1304654839}
 --- !u!1 &1477827876
 GameObject:
   m_ObjectHideFlags: 0
@@ -621,7 +653,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1571681973}
   - component: {fileID: 1571681974}
-  - component: {fileID: 1571681975}
   m_Layer: 0
   m_Name: NeuralModel
   m_TagString: Untagged
@@ -665,20 +696,6 @@ MonoBehaviour:
   display: {fileID: 1761797571}
   modelSource: {fileID: 5022602860645237092, guid: 35524beae38494a4b913ae28fcb94c51, type: 3}
   resolutionFactor: 2
---- !u!114 &1571681975
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1571681972}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b4287aa6c0d14534fb52e63b8b48aa9b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  display: {fileID: 1477827878}
-  resolution: 128
 --- !u!1 &1686248759
 GameObject:
   m_ObjectHideFlags: 0
