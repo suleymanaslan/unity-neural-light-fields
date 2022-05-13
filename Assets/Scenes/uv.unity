@@ -296,8 +296,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a1dab8bef77b1d74c9f9b8ac55a18ce7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tempPrefab: {fileID: 2663111220167508584, guid: e298144a50d36664aafa943b936edf2a, type: 3}
+  displayPrefab: {fileID: 2663111220167508584, guid: e298144a50d36664aafa943b936edf2a, type: 3}
   target: {fileID: 904962014}
+  displayProjection: 1
+  displayScale: 0.1
 --- !u!1 &1969023254
 GameObject:
   m_ObjectHideFlags: 0
