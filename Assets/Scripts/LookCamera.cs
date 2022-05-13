@@ -16,6 +16,7 @@ public class LookCamera : MonoBehaviour
     void Update()
     {
         Vector3 lookPoint = transform.position + transform.position - cameraTransform.position;
+        transform.position = new Vector3(transform.position.x, cameraTransform.position.y, transform.position.z);
         transform.LookAt(lookPoint);
     }
 }
