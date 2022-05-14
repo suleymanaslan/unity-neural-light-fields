@@ -6,6 +6,7 @@ using System.Collections.Concurrent;
 using System.Threading;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public class Receiver
 {
@@ -29,7 +30,13 @@ public class Receiver
                 {
                     //socket.SendFrameEmpty();
                     //rawImage = socket.ReceiveFrameBytes();
-                    if (socket.TrySendFrame((client.u + client.uOffset) + "," + (client.v + client.vOffset)))
+                    float uCoordinate = client.u + client.uOffset;
+                    if (uCoordinate > 1) uCoordinate -= 2;
+                    if (uCoordinate < -1) uCoordinate += 2;
+                    float vCoordinate = client.v + client.vOffset;
+                    if (vCoordinate > 1) vCoordinate -= 2;
+                    if (vCoordinate < -1) vCoordinate += 2;
+                    if (socket.TrySendFrame(uCoordinate + "," + -vCoordinate))
                     {
                         imageReceived = socket.TryReceiveFrameBytes(timeout, out rawImage);
                         if (imageReceived)
@@ -73,6 +80,9 @@ public class Client : MonoBehaviour
     [SerializeField]
     private int resolution;
 
+    [SerializeField]
+    TextMeshPro textMeshPro; 
+
     public void Start()
     {
         tex = new Texture2D(resolution, resolution, TextureFormat.RGB24, mipChain: false);
@@ -98,6 +108,7 @@ public class Client : MonoBehaviour
                 action.Invoke();
             }
         }
+        textMeshPro.text = u.ToString("F1") + "-" + v.ToString("F1");
     }
 
     private void OnDestroy()
