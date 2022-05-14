@@ -29,7 +29,7 @@ public class Receiver
                 {
                     //socket.SendFrameEmpty();
                     //rawImage = socket.ReceiveFrameBytes();
-                    if (socket.TrySendFrame(client.u + "," + client.v))
+                    if (socket.TrySendFrame((client.u + client.uOffset) + "," + (client.v + client.vOffset)))
                     {
                         imageReceived = socket.TryReceiveFrameBytes(timeout, out rawImage);
                         if (imageReceived)
@@ -63,6 +63,9 @@ public class Client : MonoBehaviour
 
     [SerializeField, Range(-1f, 1f)]
     public float u, v;
+
+    [HideInInspector]
+    public float uOffset, vOffset;
 
     [SerializeField]
     private RawImage display;

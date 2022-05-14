@@ -7,6 +7,9 @@ public class LookCamera : MonoBehaviour
     [SerializeField]
     Transform cameraTransform;
 
+    [SerializeField]
+    bool reverseDirection;
+
     void Start()
     {
         
@@ -15,7 +18,15 @@ public class LookCamera : MonoBehaviour
     
     void Update()
     {
-        Vector3 lookPoint = transform.position + transform.position - cameraTransform.position;
+        Vector3 lookPoint;
+        if (reverseDirection)
+        {
+            lookPoint = transform.position - (transform.position - cameraTransform.position);
+        }
+        else
+        {
+            lookPoint = transform.position + (transform.position - cameraTransform.position);
+        }
         transform.position = new Vector3(transform.position.x, cameraTransform.position.y, transform.position.z);
         transform.LookAt(lookPoint);
     }
