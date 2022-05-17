@@ -44,7 +44,7 @@ public class UVProjection : MonoBehaviour
         float v = Asin(diff.y) / (PI * 0.5f);
         float r = Cos(0.5f * PI * v);
         float u = (Acos(diff.z / r) - PI) / (PI);
-        u = transform.position.x <= 0f ? -u : u;
+        u = (transform.position.x - target.position.x) <= 0f ? -u : u;
         if (client != null && !float.IsNaN(u) && !float.IsNaN(v))
         {
             client.u = u;
