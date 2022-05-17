@@ -25,7 +25,9 @@ public class PeriodicRotate : MonoBehaviour
         }
         else
         {
-            transform.Rotate(0, -speed * Time.deltaTime, 0);
+            //transform.localEulerAngles = new Vector3(180 * Mathf.Sin(Time.time), transform.localEulerAngles.y, transform.localEulerAngles.z);
+            transform.localRotation = Quaternion.Euler(80 * Mathf.Sin(0.5f * Time.time), transform.localEulerAngles.y - speed * Time.deltaTime, transform.localEulerAngles.z);
+            //transform.Rotate(0, -speed * Time.deltaTime, 0);
         }
     }
 }
